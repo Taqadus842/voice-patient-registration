@@ -1,0 +1,124 @@
+[
+  {
+    "type": "custom",
+    "async": false,
+    "function": {
+      "name": "create_patient_record",
+      "description": "Create a patient registration record. Call only after the patient confirms all information. Duplicate phone returns the existing record.",
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "first_name": { "type": "string", "description": "1-50 chars, letters/hyphens/apostrophes/spaces." },
+          "last_name": { "type": "string", "description": "1-50 chars, letters/hyphens/apostrophes/spaces." },
+          "date_of_birth": {
+            "type": "string",
+            "description": "MM/DD/YYYY, valid past calendar date.",
+            "pattern": "^(0[1-9]|1[0-2])/(0[1-9]|[12]\\d|3[01])/(19|20)\\d{2}$"
+          },
+          "sex": {
+            "type": "string",
+            "enum": ["male", "female", "other", "decline_to_answer"]
+          },
+          "phone_number": { "type": "string", "description": "10-digit US phone (digits or formatted)." },
+          "email": { "type": ["string", "null"], "format": "email" },
+          "address_line_1": { "type": "string" },
+          "address_line_2": { "type": ["string", "null"] },
+          "city": { "type": "string", "description": "1-100 chars." },
+          "state": { "type": "string", "pattern": "^[A-Za-z]{2}$" },
+          "zip_code": { "type": "string", "pattern": "^\\d{5}(-\\d{4})?$" },
+          "insurance_provider": { "type": ["string", "null"] },
+          "insurance_member_id": { "type": ["string", "null"] },
+          "emergency_contact_name": { "type": ["string", "null"] },
+          "emergency_contact_phone": { "type": ["string", "null"] },
+          "preferred_language": { "type": "string", "default": "English" }
+        },
+        "required": [
+          "first_name",
+          "last_name",
+          "date_of_birth",
+          "sex",
+          "phone_number",
+          "address_line_1",
+          "city",
+          "state",
+          "zip_code"
+        ]
+      }
+    },
+    "server": {
+      "method": "POST",
+      "url": "{{API_BASE_URL}}/patients",
+      "headers": { "Content-Type": "application/json" }
+    }
+  },
+  {
+    "type": "custom",
+    "async": false,
+    "function": {
+      "name": "schedule_appointment",
+      "description": "Schedule a mock first appointment for a registered patient after they confirm a preferred date/time.",
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "patient_id": {
+            "type": "string",
+            "description": "patient_id returned by create_patient_record."
+          },
+          "scheduled_for": {
+            "type": "string",
+            "description": "ISO-8601 datetime, e.g. 2026-10-01T09:30:00"
+          },
+          "duration_minutes": {
+            "type": "integer",
+            "minimum": 15,
+            "maximum": 240,
+            "default": 30
+          },
+          "reason": {
+            "type": ["string", "null"],
+            "description": "Visit reason if the caller provided one."
+          }
+        },
+        "required": ["patient_id", "scheduled_for"]
+      }
+    },
+    "server": {
+      "method": "POST",
+      "url": "{{API_BASE_URL}}/patients/{patient_id}/appointments",
+      "headers": { "Content-Type": "application/json" }
+    }
+  },
+  {
+    "type": "custom",
+    "async": false,
+    "function": {
+      "name": "save_call_transcript",
+      "description": "Store a short summary (and optional transcript) of the registration call, linked to the patient when known.",
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "patient_id": { "type": ["string", "null"] },
+          "phone_number": { "type": ["string", "null"] },
+          "language": { "type": "string", "enum": ["en", "es"], "default": "en" },
+          "summary": {
+            "type": "string",
+            "description": "2-3 sentence summary of the call and what was collected."
+          },
+          "transcript": {
+            "type": ["string", "null"],
+            "description": "Optional fuller transcript text."
+          }
+        },
+        "required": ["summary"]
+      }
+    },
+    "server": {
+      "method": "POST",
+      "url": "{{API_BASE_URL}}/transcripts",
+      "headers": { "Content-Type": "application/json" }
+    }
+  }
+]
