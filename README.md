@@ -124,7 +124,7 @@ cp .env.example .env
 ```env
 OPENAI_API_KEY=
 DATABASE_URL=sqlite:///patients.db
-API_BASE_URL=https://your-app.railway.app
+API_BASE_URL=https://voice-patient-registration-production-bc97.up.railway.app
 PORT=8000
 ```
 
@@ -273,47 +273,6 @@ Coverage includes:
 - Duplicate phone detection
 - Name/state/ZIP/email/sex validation
 - Response envelope shape on errors
-
-## Deployment
-
-Public GitHub repo + live API URL + live phone number are required for review.
-
-### API (Railway)
-
-1. Push this repository to GitHub.
-2. In [Railway](https://railway.app), create a new project → **Deploy from GitHub repo**.
-3. Railway detects `railway.json` / Nixpacks. Set the start command (already provided):
-
-   ```bash
-   uvicorn app.main:app --host 0.0.0.0 --port $PORT
-   ```
-
-4. Add environment variables in Railway:
-   - `OPENAI_API_KEY`
-   - `DATABASE_URL` (default `sqlite:///patients.db` works for a demo volume; use a persistent volume or external DB for production)
-   - `API_BASE_URL` (your Railway public domain, e.g. `https://your-app.up.railway.app`)
-5. Deploy. Verify `https://your-app.up.railway.app/health` returns `{"status":"ok"}`.
-6. For durable storage on Railway, attach a Volume mounted so `patients.db` persists across deploys, or point `DATABASE_URL` at a managed Postgres/MySQL database.
-
-Other acceptable hosts: Render, Fly.io, Replit, or ngrok (local + tunnel).
-
-### Live phone number (Twilio + Vapi)
-
-1. Buy/assign a U.S. number in Twilio.
-2. Point the Twilio number’s voice webhook at your Vapi-assigned number (or use Vapi’s Twilio import).
-3. Attach the number to the Vapi assistant (steps below).
-4. Put the live API URL in the tool schema’s `{{API_BASE_URL}}`.
-5. Call the number end-to-end and confirm registration appears via `GET /patients`.
-
-## Vapi setup
-
-1. Create a new **Assistant** in Vapi.
-2. Set the model to **OpenAI GPT-4o Mini** and add your OpenAI API key.
-3. Paste the contents of `app/vapi/assistant_prompt.md` into the assistant **system prompt** / first message.
-4. Import `app/vapi/tool_schema.json` as a custom tool (`create_patient_record`).
-5. Replace `{{API_BASE_URL}}` with your deployed API base URL (or set Vapi variable substitution for it).
-6. Attach a **Twilio phone number** to the assistant.
-7. Call the number and complete a registration end-to-end.
 
 ## Security
 
